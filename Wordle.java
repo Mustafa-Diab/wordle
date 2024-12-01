@@ -71,7 +71,7 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
         try (BufferedReader reader = new BufferedReader(new FileReader("/Users/Mustafa/Desktop/Wordle_Word_List.txt"))) {
             String word;
             while ((word = reader.readLine()) != null) 
-                wordList.add(word.toLowerCase()); // Add words to the list in lowercase
+                wordList.add(word.toLowerCase().trim()); // Add words to the list in lowercase
         } 
         catch (IOException e) 
         {
