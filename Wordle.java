@@ -27,7 +27,15 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
     private String[][] grid = new String[6][5]; // Stores guessed letters
     private Color[][] colors = new Color[6][5]; // Tracks colors of grid cells
     private ArrayList<String> wordList = new ArrayList<>(); // List of possible words
-
+    
+    // Define the keyboard layout and colors
+    private final String[][] keys = {
+        {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"},
+        {"A", "S", "D", "F", "G", "H", "J", "K", "L"},
+        {"ENTER", "Z", "X", "C", "V", "B", "N", "M", "DELETE"}
+    };
+    private final Color[][] keyColors = new Color[keys.length][];
+    
     // Constructor initializes the game window and components
     public Wordle() 
     {
@@ -56,6 +64,15 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
                 grid[row][col] = ""; 
                 colors[row][col] = Color.BLACK;
             }
+        }
+        
+        // Initialize the keyboard colors
+        for (int i = 0; i < keys.length; i++) 
+        {
+            keyColors[i] = new Color[keys[i].length];
+            
+            for (int j = 0; j < keys[i].length; j++) 
+                keyColors[i][j] = Color.LIGHT_GRAY; // Default color
         }
 
         // Select a random word for the game
@@ -139,45 +156,34 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
     // Draw the on-screen keyboard
     private void drawKeyboard(Graphics g) 
     {
-        // Define the layout of the keyboard
-        String[][] keys = {
-            {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"},
-            {"A", "S", "D", "F", "G", "H", "J", "K", "L"},
-            {"ENTER", "Z", "X", "C", "V", "B", "N", "M", "DELETE"}
-        };
-
-        // Starting x-coordinates for each row & starting y-coordinate for the keyboard
         int[] startX = {100, 130, 75};
         int startY = 750;
 
-        g.setFont(new Font("Arial", Font.BOLD, 30)); // Set font for keys
+        g.setFont(new Font("Arial", Font.BOLD, 30));
 
-        // Draw each key
         for (int row = 0; row < keys.length; row++) 
         {
-            for (String key : keys[row]) 
+            int x = startX[row];
+            for (int col = 0; col < keys[row].length; col++) 
             {
-                int width = key.equals("ENTER") || key.equals("DELETE") ? KEY_WIDTH + 75 : KEY_WIDTH; // Wider keys for special buttons
-                drawKey(g, key, startX[row], startY + row * (KEY_HEIGHT + PADDING), width, KEY_HEIGHT); // Draw key
-                startX[row] += width + PADDING; // Update x-position for next key
+                int width = keys[row][col].equals("ENTER") || keys[row][col].equals("DELETE") ? KEY_WIDTH + 75 : KEY_WIDTH;
+
+                // Use the color from keyColors
+                g.setColor(keyColors[row][col]);
+                g.fillRoundRect(x, startY + row * (KEY_HEIGHT + PADDING), width, KEY_HEIGHT, 12, 12);
+                g.setColor(Color.DARK_GRAY);
+                g.drawRoundRect(x, startY + row * (KEY_HEIGHT + PADDING), width, KEY_HEIGHT, 12, 12);
+
+                // Draw the label
+                FontMetrics metrics = g.getFontMetrics(g.getFont());
+                int labelX = x + (width - metrics.stringWidth(keys[row][col])) / 2;
+                int labelY = startY + row * (KEY_HEIGHT + PADDING) + (KEY_HEIGHT + metrics.getAscent() - metrics.getDescent()) / 2;
+                g.setColor(Color.WHITE);
+                g.drawString(keys[row][col], labelX, labelY);
+
+                x += width + PADDING;
             }
         }
-    }
-
-    // Draw an individual key
-    private void drawKey(Graphics g, String label, int x, int y, int width, int height) 
-    {
-        g.setColor(Color.LIGHT_GRAY); // Key background color
-        g.fillRoundRect(x, y, width, height, 12, 12); // Draw rounded rectangle for key
-        g.setColor(Color.DARK_GRAY); // Key border color
-        g.drawRoundRect(x, y, width, height, 12, 12); // Draw border
-
-        // Center the label within the key
-        FontMetrics metrics = g.getFontMetrics(g.getFont());
-        int labelX = x + (width - metrics.stringWidth(label)) / 2; // Center x
-        int labelY = y + (height + metrics.getAscent() - metrics.getDescent()) / 2; // Center y
-        g.setColor(Color.WHITE); // Set text color
-        g.drawString(label, labelX, labelY); // Draw key label
     }
 
     // Handles key presses from the keyboard
@@ -205,38 +211,40 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
         else 
             evaluateGuess(guess); // Proceeds to evaluate the guess
     }
-
-    // Evaluates the guess and updates the colors
+    
     private void evaluateGuess(String guess) 
     {
-        boolean[] correctUsed = new boolean[GRID_COLS]; // Tracks which letters in the correct word have been used
+        boolean[] correctUsed = new boolean[GRID_COLS];
 
-        // Checks for correct letters in the correct positions
         for (int i = 0; i < GRID_COLS; i++) 
         {
             if (guess.charAt(i) == correctWord.charAt(i)) 
             {
-                colors[currentRow][i] = new Color(144, 238, 144); // Green for correct position
-                correctUsed[i] = true; // Marks this letter as used
+                colors[currentRow][i] = new Color(144, 238, 144); // Green
+                correctUsed[i] = true;
+                updateKeyColor(guess.charAt(i), new Color(144, 238, 144)); // Update keyboard color
             }
         }
 
-        // Checks for correct letters in the wrong positions
         for (int i = 0; i < GRID_COLS; i++) 
         {
-            if (colors[currentRow][i] == Color.BLACK) // Skips already processed letters
+            if (colors[currentRow][i] == Color.BLACK) 
             {
                 for (int j = 0; j < GRID_COLS; j++) 
                 {
                     if (!correctUsed[j] && guess.charAt(i) == correctWord.charAt(j)) 
                     {
-                        colors[currentRow][i] = Color.YELLOW; // Yellow for correct letter, wrong position
-                        correctUsed[j] = true; // Marks this letter as used
+                        colors[currentRow][i] = Color.YELLOW; // Yellow
+                        correctUsed[j] = true;
+                        updateKeyColor(guess.charAt(i), Color.YELLOW); // Update keyboard color
                         break;
                     }
                 }
-                if (colors[currentRow][i] == Color.BLACK) // If still unmatched
-                    colors[currentRow][i] = Color.DARK_GRAY; // Gray for incorrect letter
+                if (colors[currentRow][i] == Color.BLACK) 
+                {
+                    colors[currentRow][i] = Color.DARK_GRAY; // Dark gray
+                    updateKeyColor(guess.charAt(i), Color.DARK_GRAY); // Update keyboard color
+                }
             }
         }
 
@@ -264,6 +272,29 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
 
         currentCol = 0; // Resets the column for the next guess
     }
+
+    // Helper method to update the color of a key
+    private void updateKeyColor(char keyChar, Color newColor) 
+    {
+        String key = String.valueOf(keyChar).toUpperCase();
+
+        for (int row = 0; row < keys.length; row++) 
+        {
+            for (int col = 0; col < keys[row].length; col++) 
+            {
+                if (keys[row][col].equals(key)) 
+                {
+                	// Get the current color of the key to compare with the new color to see if the key needs to be updated
+                    Color currentColor = keyColors[row][col];
+
+                    // Update color based on priority
+                    if (currentColor.equals(Color.LIGHT_GRAY) || (currentColor.equals(Color.YELLOW) && newColor.equals(new Color(144, 238, 144))) || (currentColor.equals(Color.DARK_GRAY) && (newColor.equals(Color.YELLOW) || newColor.equals(new Color(144, 238, 144)))))
+                        keyColors[row][col] = newColor;
+                }
+            }
+        }
+    }
+
     
     // Updates game statistics
     private void updateGameStats(boolean won) 
