@@ -212,90 +212,95 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
             evaluateGuess(guess); // Proceeds to evaluate the guess
     }
     
+ // Evaluates the user's guess and updates the game state accordingly
     private void evaluateGuess(String guess) 
     {
-        boolean[] correctUsed = new boolean[GRID_COLS];
+        boolean[] correctUsed = new boolean[GRID_COLS]; // Tracks which characters in the correct word have been matched
 
+        // Check for exact matches (green cells)
         for (int i = 0; i < GRID_COLS; i++) 
         {
             if (guess.charAt(i) == correctWord.charAt(i)) 
             {
-                colors[currentRow][i] = new Color(144, 238, 144); // Green
-                correctUsed[i] = true;
-                updateKeyColor(guess.charAt(i), new Color(144, 238, 144)); // Update keyboard color
+                colors[currentRow][i] = new Color(144, 238, 144); // Set the color to green for correct position
+                correctUsed[i] = true; // Mark the character as used
+                updateKeyColor(guess.charAt(i), new Color(144, 238, 144)); // Update the keyboard key to green
             }
         }
 
+        // Check for partial matches (yellow cells) and incorrect guesses (dark gray cells)
         for (int i = 0; i < GRID_COLS; i++) 
         {
-            if (colors[currentRow][i] == Color.BLACK) 
+            if (colors[currentRow][i] == Color.BLACK) // Only check unmatched letters
             {
                 for (int j = 0; j < GRID_COLS; j++) 
                 {
+                    // Check if the guessed letter exists in the correct word at a different position
                     if (!correctUsed[j] && guess.charAt(i) == correctWord.charAt(j)) 
                     {
-                        colors[currentRow][i] = Color.YELLOW; // Yellow
-                        correctUsed[j] = true;
-                        updateKeyColor(guess.charAt(i), Color.YELLOW); // Update keyboard color
+                        colors[currentRow][i] = Color.YELLOW; // Set the color to yellow for partial match
+                        correctUsed[j] = true; // Mark this character in the correct word as used
+                        updateKeyColor(guess.charAt(i), Color.YELLOW); // Update the keyboard key to yellow
                         break;
                     }
                 }
+
+                // If no match was found, mark as incorrect
                 if (colors[currentRow][i] == Color.BLACK) 
                 {
-                    colors[currentRow][i] = Color.DARK_GRAY; // Dark gray
-                    updateKeyColor(guess.charAt(i), Color.DARK_GRAY); // Update keyboard color
+                    colors[currentRow][i] = Color.DARK_GRAY; // Set the color to dark gray for no match
+                    updateKeyColor(guess.charAt(i), Color.DARK_GRAY); // Update the keyboard key to dark gray
                 }
             }
         }
+        
+        if (guess.equals(correctWord) || ++currentRow == GRID_ROWS)
+        {
+            gamesPlayed++; // Increment total games played
+            gameOver = true; // End the game
+            
+            // Determine if the guess is correct
+            boolean isCorrect = guess.equals(correctWord);
+            
+            // Increment win count for the correct guess
+            if (isCorrect) winCountPerGuess[currentRow]++;
 
-        // Checks if the guess is correct
-        if (guess.equals(correctWord)) 
-        {
-            gamesPlayed++; // Increments games played
-            gameOver = true; // Marks the game as over
-            winCountPerGuess[currentRow]++; // Updates win stats
-            updateGameStats(true); // Updates stats for a win
-            repaint(); // Updates the screen
-            showMessage(displayMessage[currentRow], 1500); // Displays a win message
-            GameStats.displayStats(this, gamesPlayed, winPercentage, currentStreak, maxStreak, currentRow + 1, winCountPerGuess, this); // Shows game stats
-        } 
-        // Checks if all attempts are used
-        else if (++currentRow == GRID_ROWS)
-        {
-            gamesPlayed++; // Increments games played
-            gameOver = true; // Marks the game as over
-            updateGameStats(false); // Updates stats for a loss
-            repaint(); // Updates the screen
-            showMessage(correctWord.toUpperCase(), 1750); // Displays the correct word
-            GameStats.displayStats(this, gamesPlayed, winPercentage, currentStreak, maxStreak, currentRow, winCountPerGuess, this); // Shows game stats
+            repaint(); // Refresh the screen
+            
+            updateGameStats(isCorrect); // Update game stats (win or loss)
+            showMessage(isCorrect ? displayMessage[currentRow] : correctWord.toUpperCase(), isCorrect ? 1500 : 1750); // Show the message (win or correct word)
+            GameStats.displayStats(this, gamesPlayed, winPercentage, currentStreak, maxStreak, isCorrect ? currentRow + 1 : currentRow, winCountPerGuess, this); 
         }
-
-        currentCol = 0; // Resets the column for the next guess
+		
+        currentCol = 0; // Reset the current column for the next guess
     }
 
-    // Helper method to update the color of a key
+    // Updates the color of a keyboard key based on the letter's match status
     private void updateKeyColor(char keyChar, Color newColor) 
     {
-        String key = String.valueOf(keyChar).toUpperCase();
+        String key = String.valueOf(keyChar).toUpperCase(); // Convert the character to uppercase for consistency
 
+        // Iterate through all keyboard keys to find a match
         for (int row = 0; row < keys.length; row++) 
         {
             for (int col = 0; col < keys[row].length; col++) 
             {
-                if (keys[row][col].equals(key)) 
+                if (keys[row][col].equals(key)) // Check if the key matches the guessed character
                 {
-                	// Get the current color of the key to compare with the new color to see if the key needs to be updated
-                    Color currentColor = keyColors[row][col];
+                    Color currentColor = keyColors[row][col]; // Get the current color of the key
 
-                    // Update color based on priority
-                    if (currentColor.equals(Color.LIGHT_GRAY) || (currentColor.equals(Color.YELLOW) && newColor.equals(new Color(144, 238, 144))) || (currentColor.equals(Color.DARK_GRAY) && (newColor.equals(Color.YELLOW) || newColor.equals(new Color(144, 238, 144)))))
-                        keyColors[row][col] = newColor;
+                    // Update the key color based on the priority of colors (green > yellow > dark gray)
+                    if (currentColor.equals(Color.LIGHT_GRAY) || 
+                       (currentColor.equals(Color.YELLOW) && newColor.equals(new Color(144, 238, 144))) || 
+                       (currentColor.equals(Color.DARK_GRAY) && (newColor.equals(Color.YELLOW) || newColor.equals(new Color(144, 238, 144)))) )
+                    {
+                        keyColors[row][col] = newColor; // Set the new color
+                    }
                 }
             }
         }
     }
 
-    
     // Updates game statistics
     private void updateGameStats(boolean won) 
     {
@@ -306,33 +311,14 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
 
         maxStreak = Math.max(maxStreak, currentStreak); // Updates the maximum streak
         
-        int totalGamesWon = 0;
+        double totalGamesWon = 0;
         
         for (int i = 0; i < winCountPerGuess.length; i++) // Calculates total wins
             totalGamesWon += winCountPerGuess[i];
         
-        winPercentage = (gamesPlayed == 0) ? 0 : (int) ((double) totalGamesWon / gamesPlayed * 100); // Calculates win percentage
+        winPercentage = (int) (totalGamesWon / gamesPlayed * 100); // Calculates win percentage
     }
-    
-    // Resets the game state
-    public void resetGame() 
-    {
-        currentRow = 0; // Resets the row
-        currentCol = 0; // Resets the column
-        gameOver = false; // Resets the game over state
-        message = ""; // Clears any message
-        
-        // Clears the grid
-        for (int row = 0; row < GRID_ROWS; row++) 
-        {
-            for (int col = 0; col < GRID_COLS; col++) 
-            {
-                grid[row][col] = "";
-                colors[row][col] = Color.BLACK;
-            }
-        }
-    }
-    
+   
     // Displays a temporary message on the screen
     private void showMessage(String msg, int timeLength) 
     {
