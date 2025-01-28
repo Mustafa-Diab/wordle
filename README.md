@@ -1,31 +1,30 @@
-# Project Name
+# Wordle Game  
 
-Version 1.0
+Version 1
 
-## 📖 Overview
+## 📖 Overview  
 
-A brief description of your project:  
-- What it does  
-- Why it’s useful  
-- Technologies used  
+This is a Java implementation of the classic Wordle game! Players have six attempts to guess a five-letter word, with feedback provided on each guess.  
+- Green letters are correct and in the right position.  
+- Yellow letters are in the word but in the wrong position.  
+- Gray letters are not in the word.  
 
-## 🛠️ Features
+## 🛠️ Features  
 
-- Feature 1  
-- Feature 2  
-- Feature 3  
+- Intuitive gameplay with clear feedback for each guess.  
+- Word validation to ensure guesses are real words.  
+- A stats tracker to monitor player performance.  
+- Modular design with separate classes for gameplay, rules, and statistics.  
 
-## 🚀 Getting Started
+## 🚀 Getting Started  
 
-## How to Play (could keep or remove)
+### Prerequisites  
 
-### Prerequisites
+- Java Development Kit (JDK) 11 or higher.  
+- A text editor or IDE (e.g., IntelliJ, Eclipse, VS Code).  
 
-- Software/tools needed (e.g., `Node.js`, `Python`, etc.)
-- How to install them  
+### Installation  
 
-### Installation
-
-1. Clone the repository:
+1. Clone the repository:  
    ```bash
-   git clone https://github.com/your-username/your-repo-name.git
+   git clone https://github.com/your-username/wordle-game.git
