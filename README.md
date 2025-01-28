@@ -17,6 +17,8 @@ A brief description of your project:
 
 ## 🚀 Getting Started
 
+## How to Play (could keep or remove)
+
 ### Prerequisites
 
 - Software/tools needed (e.g., `Node.js`, `Python`, etc.)
