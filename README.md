@@ -27,4 +27,4 @@ This is a Java implementation of the classic Wordle game! Players have six attem
 
 1. Clone the repository:  
    ```bash
-   git clone https://github.com/your-username/wordle-game.git
+   git clone https://github.com/Mustafa-Diab/wordle.git
