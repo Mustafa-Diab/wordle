@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 public class Wordle extends JFrame implements KeyListener, MouseListener 
@@ -58,50 +59,76 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
 	// Array to store colors of each key on the keyboard
 	private final Color[][] keyColors = new Color[keys.length][]; 
     
-    public Wordle() 
-    {
-        super("Wordle"); // Set window title
-        setSize(900, 1100); // Set window size
-        setLocationRelativeTo(null); // Center window
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Closes application when the window is closed
-        getContentPane().setBackground(Color.BLACK); // Set background to black
+	private void hint() 
+	{		
+	    // Flatten your grid of guesses into a single list of letters
+	    ArrayList<String> flatList = new ArrayList<>();
+	    for (String[] row : grid) 
+	        flatList.addAll(Arrays.asList(row));
+	    
 
-        this.addKeyListener(this); // Key listener for keyboard input
-        this.addMouseListener(this); // Mouse listener for clicks on keyboard
+	    // Look for the first letter in the correct word that's not yet in flatList
+	    for (int i = 0; i < correctWord.length(); i++) 
+	    {
+	        String letter = String.valueOf(correctWord.charAt(i)).toUpperCase();
+	        if (!flatList.contains(letter)) 
+	        {
+	            // Show it on the GUI for 1.5 seconds
+	            showMessage("Hint: the word contains '" + letter + "'", 1500);
+	            Wordle.this.requestFocusInWindow();
+	            return;
+	        }
+	    }
 
-        label = new JLabel();
-        label.setBounds(50, 50, 400, 50);
-        label.setForeground(Color.WHITE);
-        this.add(label);
-        
-        // Initialize the grid and colors
-        for (int row = 0; row < 6; row++) 
-        {
-            for (int col = 0; col < 5; col++) 
-            {
-                grid[row][col] = ""; 
-                colors[row][col] = Color.BLACK;
-            }
-        }
-        
-        // Initialize key colors
-        for (int i = 0; i < keys.length; i++) 
-        {
-        	// Initializes number of columns for each row of the keyColors array dynamically based of keyboard length
-            keyColors[i] = new Color[keys[i].length];
-            
-            for (int j = 0; j < keys[i].length; j++) 
-            	// Setting base color to light gray for keyboard until changed later 
-                keyColors[i][j] = Color.LIGHT_GRAY; 
-        }
-        
-        // Select a random word to guess
-        selectRandomWord();
-        setVisible(true);  
-        repaint();         
-    }
-    
-    private void selectRandomWord() 
+	    // If every letter’s already been guessed
+	    showMessage("No more hints available!", 1200);
+	    Wordle.this.requestFocusInWindow();
+	}
+	
+	public Wordle() 
+	{
+	    super("Wordle"); // Set window title
+	    setSize(900, 1100); // Set window size
+	    setLocationRelativeTo(null); // Center window
+	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Closes application when the window is closed
+	    getContentPane().setBackground(Color.BLACK); // Set background to black
+	    setLayout(null); // Use absolute positioning
+
+	    this.addKeyListener(this); // Key listener for keyboard input
+	    this.addMouseListener(this); // Mouse listener for clicks on keyboard
+
+	    label = new JLabel();
+	    label.setBounds(50, 50, 400, 50);
+	    label.setForeground(Color.WHITE);
+	    this.add(label);
+	    
+	    // Initialize the grid and colors
+	    for (int row = 0; row < 6; row++) 
+	    {
+	        for (int col = 0; col < 5; col++) 
+	        {
+	            grid[row][col] = ""; 
+	            colors[row][col] = Color.BLACK;
+	        }
+	    }
+	    
+	    // Initialize key colors
+	    for (int i = 0; i < keys.length; i++) 
+	    {
+	        keyColors[i] = new Color[keys[i].length];
+	        for (int j = 0; j < keys[i].length; j++) 
+	            keyColors[i][j] = Color.LIGHT_GRAY; 
+	    }
+	    
+	    // Select a random word to guess
+	    selectRandomWord();	    
+	    setVisible(true);
+	    this.setFocusable(true);
+	    this.requestFocusInWindow();
+	    repaint();         
+	}
+
+	private void selectRandomWord() 
     {
     	convertFileToList(fileLocation, commonWordList); // Load common words
     	convertFileToList(fileLocation2, allWordList); // Load all words
@@ -140,6 +167,12 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
         drawTitle(g); // Draw the title
         drawMessage(g); // Draw the message
         drawKeyboard(g); // Draw the keyboard
+        
+        ImageIcon icon = new ImageIcon("hint.png");
+        Image img = icon.getImage();
+        if (img != null) 
+        	g.drawImage(img, getWidth() - 175, 35, 150, 150, null);
+        
     }
     
     private void drawGrid(Graphics g) 
@@ -243,7 +276,16 @@ public class Wordle extends JFrame implements KeyListener, MouseListener
 
         // Get the point where the mouse was clicked
         Point clickPoint = e.getPoint(); 
-                
+        
+        // Check if click is inside hint image bounds
+        int imgX = getWidth() - 175, imgY = 35, imgWidth = 150, imgHeight = 150;
+
+        if (clickPoint.x >= imgX && clickPoint.x <= imgX + imgWidth && clickPoint.y >= imgY && clickPoint.y <= imgY + imgHeight) 
+        {
+            hint();
+            return;
+        }
+        
         // Starting positions for the keys on the X-axis for each row
         int[] startX = {100, 130, 75}; 
         int startY = 750; 
